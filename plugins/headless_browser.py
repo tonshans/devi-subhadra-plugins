@@ -1,3 +1,9 @@
+"""
+Simulate an agent opening Chromium to read Threads and X trends without official APIs.
+install the browser extra: cd devi-subhadra && uv sync --extra browser
+download Chromium: uv run playwright install chromium
+"""
+
 from typing import Dict, Any, Type, Literal, List
 from pydantic import Field
 from playwright.async_api import async_playwright

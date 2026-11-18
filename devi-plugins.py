@@ -20,6 +20,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import NamedTuple
 
 ROOT = Path(__file__).resolve().parent
 CATALOG = ROOT / "plugins"
@@ -33,6 +34,12 @@ LIFECYCLE_METHODS = {"initialize", "execute", "shutdown"}
 
 class PluginError(Exception):
     """A plugin cannot be inspected or installed."""
+
+
+class PluginInfo(NamedTuple):
+    name: str
+    description: str
+    notes: list[str]
 
 
 def read_config(path: Path = CONFIG) -> dict[str, str]:
@@ -102,7 +109,13 @@ def _is_base_plugin(cls: ast.ClassDef) -> bool:
     return False
 
 
-def inspect_plugin(path: Path) -> tuple[str, str]:
+def _install_notes(tree: ast.Module) -> list[str]:
+    """Module docstring: first line is a summary, the rest are post-install steps."""
+    docstring = ast.get_docstring(tree) or ""
+    return [line.strip() for line in docstring.splitlines()[1:] if line.strip()]
+
+
+def inspect_plugin(path: Path) -> PluginInfo:
     """Static contract check: no import needed, so missing deps cannot hide errors."""
     try:
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
@@ -156,7 +169,7 @@ def inspect_plugin(path: Path) -> tuple[str, str]:
     if missing:
         raise PluginError("missing lifecycle methods: " + ", ".join(sorted(missing)))
 
-    return name, description
+    return PluginInfo(name, description, _install_notes(tree))
 
 
 def catalog_plugins() -> list[Path]:
@@ -223,15 +236,15 @@ def command_available(agent: Path) -> None:
         return
     for path in catalog_plugins():
         try:
-            name, description = inspect_plugin(path)
+            info = inspect_plugin(path)
         except PluginError as exc:
             print(f"  INVALID  {path.name}: {exc}")
             continue
-        mark = "*" if (agent / "plugins" / f"{name}.py").is_file() else " "
-        summary = " ".join(description.split())
+        mark = "*" if (agent / "plugins" / f"{info.name}.py").is_file() else " "
+        summary = " ".join(info.description.split())
         if len(summary) > 78:
             summary = summary[:75] + "..."
-        print(f" [{mark}] {name:<24} {summary}")
+        print(f" [{mark}] {info.name:<24} {summary}")
 
 
 def command_installed(agent: Path) -> None:
@@ -258,9 +271,9 @@ def command_install(agent: Path, name: str) -> None:
     if not (agent / "core").is_dir():
         raise PluginError(f"{agent} does not look like a devi-subhadra checkout")
 
-    plugin_name, _ = inspect_plugin(source)
-    if plugin_name != name:
-        raise PluginError(f"catalog file plugin_name is '{plugin_name}', not '{name}'")
+    info = inspect_plugin(source)
+    if info.name != name:
+        raise PluginError(f"catalog file plugin_name is '{info.name}', not '{name}'")
 
     target_dir = agent / "plugins"
     tests_dir = agent / "tests"
@@ -286,6 +299,10 @@ def command_install(agent: Path, name: str) -> None:
     print(f"{'updated' if already else 'installed'}: {target}")
     if source_test.is_file():
         print(f"installed test: {target_test}")
+    if info.notes:
+        print("next steps:")
+        for note in info.notes:
+            print(f"  - {note}")
 
 
 def command_remove(agent: Path, name: str, force: bool) -> None:

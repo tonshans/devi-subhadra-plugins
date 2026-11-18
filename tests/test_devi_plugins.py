@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-MODULE_PATH = Path(__file__).resolve().parent / "devi-plugins.py"
+MODULE_PATH = Path(__file__).resolve().parent.parent / "devi-plugins.py"
 _spec = importlib.util.spec_from_file_location("devi_plugins", MODULE_PATH)
 dp = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(dp)
@@ -50,7 +50,9 @@ class InspectTests(unittest.TestCase):
             return dp.inspect_plugin(path)
 
     def test_accepts_valid_plugin(self):
-        self.assertEqual(self._inspect(GOOD_PLUGIN), ("demo", "Demo plugin."))
+        self.assertEqual(
+            self._inspect(GOOD_PLUGIN), ("demo", "Demo plugin.", [])
+        )
 
     def test_rejects_missing_lifecycle_method(self):
         broken = GOOD_PLUGIN.replace("    def shutdown(self):\n        return None\n", "")
@@ -128,6 +130,15 @@ class InstallTests(unittest.TestCase):
     def test_install_rejects_unknown_plugin(self):
         with self.assertRaises(dp.PluginError):
             dp.command_install(self.agent, "missing")
+
+    def test_install_prints_docstring_notes(self):
+        (self.catalog / "demo.py").write_text(
+            '"""Demo plugin.\nadd DEMO_KEY to .env\n"""\n' + GOOD_PLUGIN,
+            encoding="utf-8",
+        )
+        output = _quiet(dp.command_install, self.agent, "demo")
+        self.assertIn("next steps:", output)
+        self.assertIn("add DEMO_KEY to .env", output)
 
 
 if __name__ == "__main__":
