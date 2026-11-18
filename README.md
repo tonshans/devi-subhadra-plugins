@@ -65,26 +65,6 @@ Kalau `.venv` agent tidak ada, langkah 4 dilewati dengan peringatan.
 - `remove <nama>`: hapus plugin + test-nya. File yang bukan dari katalog
   (plugin buatan agent) hanya dihapus dengan `--force`.
 
-## Plugin di katalog
-
-| Plugin | Kebutuhan |
-| --- | --- |
-| `web_browser` | stdlib saja |
-| `academic_search` | `httpx` |
-| `community_pulse` | `httpx` |
-| `mcp_connector` | `httpx` (server MCP eksternal) |
-| `browserless_browser` | `httpx` + `BROWSERLESS_API_KEY` di `.env` |
-| `antigravity_delegate` | CLI `agy` di LXC |
-| `headless_browser` | extra `browser` (`playwright` + Chromium) |
-| `lainnya` | `menyusul` |
-
-Untuk `headless_browser`:
-
-```bash
-cd ../devi-subhadra
-uv sync --extra browser
-uv run playwright install chromium
-```
 
 ## Menambah plugin baru
 
