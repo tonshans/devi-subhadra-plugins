@@ -1,0 +1,3 @@
+# Lokasi checkout agent devi-subhadra.
+# Relatif terhadap file ini, atau path absolut. Opsi --dir menimpa nilai ini.
+agent_dir: ../devi-subhadra
