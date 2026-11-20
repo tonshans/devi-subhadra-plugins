@@ -5,12 +5,12 @@ from core.schemas import StrictBaseModel, PluginOutputSchema
 from core.base_plugin import BaseAgentPlugin
 
 class CommunityPulseInput(StrictBaseModel):
-    query: str = Field(..., min_length=2, description="Kata kunci untuk dicari di komunitas")
-    subreddit: str = Field(default="MachineLearning", description="Nama subreddit tanpa awalan /r/")
+    query: str = Field(..., min_length=2, description="Keywords to search for in the community")
+    subreddit: str = Field(default="web3", description="Subreddit name without prefix /r/")
 
 class CommunityPulsePlugin(BaseAgentPlugin):
     plugin_name = "community_pulse"
-    description = "Membaca sentimen komunitas dan tren real-time via Reddit JSON API."
+    description = "Reading community sentiment and real-time trends via the Reddit JSON API."
     input_schema: Type[StrictBaseModel] = CommunityPulseInput
 
     def initialize(self, config: Dict[str, Any]) -> bool:

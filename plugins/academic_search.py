@@ -5,12 +5,12 @@ from core.schemas import StrictBaseModel, PluginOutputSchema
 from core.base_plugin import BaseAgentPlugin
 
 class AcademicSearchInput(StrictBaseModel):
-    query: str = Field(..., min_length=2, description="Topik riset atau kata kunci jurnal")
+    query: str = Field(..., min_length=2, description="Research topic or journal keywords")
     max_results: int = Field(default=3, ge=1, le=10)
 
 class AcademicSearchPlugin(BaseAgentPlugin):
     plugin_name = "academic_search"
-    description = "Mencari publikasi ilmiah dan paper riset terbaru via OpenAlex API."
+    description = "Searching for the latest scientific publications and research papers via the OpenAlex API."
     input_schema: Type[StrictBaseModel] = AcademicSearchInput
 
     def initialize(self, config: Dict[str, Any]) -> bool:
